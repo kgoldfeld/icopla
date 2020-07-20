@@ -28,54 +28,55 @@ genBaseProbs <- function(n, base, similarity, digits = 2) {
 #### Generate data
 
 
-iter <- function(iternum, defC, defC2, defA1, basestudy,nsites, sm) {
+iter <- function(iternum, defC, defC2, defA1, basestudy, nsites, sm)  {
 
-dstudy <- genData(nsites, id = "study")       # generate studies
-dstudy <- trtAssign(dstudy, nTrt = 3, grpName = "C") # allocate to control group
-dstudy <- trtAssign(dstudy, nTrt = 2, strata = "C", grpName = "large", ratio = c(2,1))
-dstudy <- addColumns(defC, dstudy)
+  dstudy <- genData(nsites, id = "study")       # generate studies
+  dstudy <- trtAssign(dstudy, nTrt = 3, grpName = "C") # allocate to control group
+  dstudy <- trtAssign(dstudy, nTrt = 2, strata = "C", grpName = "large", ratio = c(2,1))
+  dstudy <- addColumns(defC, dstudy)
 
-dind <- genCluster(dstudy, "study", numIndsVar = "size", "id")
-dind <- trtAssign(dind, strata="study", grpName = "control") #add control treatment variable, randomly assign control treatment in each study;rx=1:received control;rx=0:received convalescent plasma
-dind <- addColumns(defC2,dind)
-dind <- addColumns(defA1, dind) # add z
+  dind <- genCluster(dstudy, "study", numIndsVar = "size", "id")
+  dind <- trtAssign(dind, strata="study", grpName = "control") #add control treatment variable, randomly assign control treatment in each study;rx=1:received control;rx=0:received convalescent plasma
+  dind <- addColumns(defC2,dind)
+  dind <- addColumns(defA1, dind) # add z
 
 
-dl <- lapply(1:nsites, function(i) {
-  b <- basestudy[i,]
-  dx <- dind[study == i]
-  genOrdCat(dx, adjVar = "z", b, catVar = "ordY")
-})
+  dl <- lapply(1:nsites, function(i) {
+    b <- basestudy[i,]
+    dx <- dind[study == i]
+    genOrdCat(dx, adjVar = "z", b, catVar = "ordY")
+  })
 
-dind <- rbindlist(dl)
+  dind <- rbindlist(dl)
 
-### Data for Stan model
+  ### Data for Stan model
 
-N = nrow(dind) ;                              ## number of observations
-L <- dind[, length(unique(ordY))]             ## number of levels of outcome
-K <- dind[, length(unique(study))]            ## number of studies
-y <- as.numeric(dind$ordY)                    ## individual outcome
-kk <- dind$study                              ## study for individual
-ctrl <- dind$control                          ## treatment arm for individual
-cc <- dind[, .N, keyby = .(study, C)]$C       ## specific control arm for study
+  N = nrow(dind) ;                              ## number of observations
+  L <- dind[, length(unique(ordY))]             ## number of levels of outcome
+  K <- dind[, length(unique(study))]            ## number of studies
+  y <- as.numeric(dind$ordY)                    ## individual outcome
+  kk <- dind$study                              ## study for individual
+  ctrl <- dind$control                          ## treatment arm for individual
+  cc <- dind[, .N, keyby = .(study, C)]$C       ## specific control arm for study
 
-studydata <- list(N=N, L=L, K=K, y=y, kk=kk, ctrl=ctrl, cc=cc)
+  studydata <- list(N=N, L=L, K=K, y=y, kk=kk, ctrl=ctrl, cc=cc)
 
-fit <-  sampling(sm, data=studydata, seed = 1327, iter = 3000, warmup = 500, cores = 4L)
+  fit <-  sampling(sm, data=studydata, seed = 1327, iter = 3000, warmup = 500, cores = 4L)
 
-pars <- c("delta_k", "eta_0","delta", "eta", "Delta", "tau")
+  pars <- c("delta_k", "eta_0","delta", "eta", "Delta", "tau")
 
-##Option 1: print all parameters
-#s <- summary(fit, pars = pars, probs = c(0.05, 0.5, 0.95))$summary
-#data.table(iternum,rownames(s),s)
+  ##Option 1: print all parameters
+  #s <- summary(fit, pars = pars, probs = c(0.05, 0.5, 0.95))$summary
+  #data.table(iternum,rownames(s),s)
 
-##Option 2: export statistics of interest
-p.eff <- mean(extract(fit, pars = "OR")[[1]] < 1)
-p.clinic <- mean(extract(fit, pars = "OR")[[1]] < 0.8)
-Delta.mean <- mean(extract(fit, pars = 'Delta')[[1]]) #control treatment effect
-eta.mean <- mean(extract(fit, pars = 'eta')[[1]])
-eta_0.mean <- mean(extract(fit, pars = 'eta_0')[[1]])
-data.table(iternum, p.eff, p.clinic,Delta.mean,eta.mean,eta_0.mean)
+  ##Option 2: export statistics of interest
+  p.eff <- mean(extract(fit, pars = "OR")[[1]] < 1)
+  p.clinic <- mean(extract(fit, pars = "OR")[[1]] < 0.8)
+  Delta.mean <- mean(extract(fit, pars = 'Delta')[[1]]) #control treatment effect
+  eta.mean <- mean(extract(fit, pars = 'eta')[[1]])
+  eta_0.mean <- mean(extract(fit, pars = 'eta_0')[[1]])
+  
+  data.table(iternum, p.eff, p.clinic,Delta.mean,eta.mean,eta_0.mean)
 }
 
 ### Stan model
