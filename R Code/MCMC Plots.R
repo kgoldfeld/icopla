@@ -18,19 +18,17 @@ plot(fit, plotfun = "trace", pars = c("delta", "Delta"),
 plot(fit, plotfun = "trace", pars = c("eta_0", "eta"), 
      inc_warmup = FALSE, ncol = 1)
 
-
-
 ### Tau (cut-points)
 
 params <- extract(fit)
 
 getTau <- function(study) {
   x <- data.table(params$tau[, study, ])
-  x <- melt(x, id.vars = NULL, variable.name = "level", value.name = "tau",
-       variable.factor = TRUE, verbose = FALSE) 
+  x <- melt(x, measure.vars = 1:ncol(x),
+    variable.name = "level", value.name = "tau",
+    variable.factor = TRUE, verbose = FALSE) 
   x[, level := as.numeric(level)]
-  x
-  
+  x[]
 }
 
 p <- list()
@@ -49,8 +47,9 @@ gridExtra::grid.arrange(grobs = p, nrow = 3)
 ### Study effects
 
 delta_k <- data.table(params$delta_k)
-delta_k <- melt(delta_k, id.vars = NULL, variable.name = "study", value.name = "delta_k",
-                variable.factor = TRUE)  
+delta_k <- melt(delta_k, measure.vars = 1:ncol(delta_k),
+      variable.name = "study", value.name = "delta_k",
+      variable.factor = TRUE)  
 
 delta_k[, study := as.numeric(study)]
 delta_k <- merge(delta_k, dstudy, by = "study")
@@ -68,7 +67,8 @@ ggplot(data = delta_k, aes(x=delta_k, group = study)) +
 ### Control-type efffects
 
 delta <- data.table(params$delta)
-delta <- melt(delta, id.vars = NULL, variable.name = "control", value.name = "delta",
+delta <- melt(delta, measure.vars = 1:ncol(delta),
+              variable.name = "control", value.name = "delta",
               variable.factor = TRUE)  
 
 delta[, control := as.numeric(control)]
@@ -88,7 +88,7 @@ Delta <- data.table(Delta = params$Delta)
 ggplot(data = Delta, aes(x=Delta)) +
   geom_density(fill = c_dark)+
   theme(panel.grid = element_blank()) +
-  xlim(-3, 3)
+  xlim(-3, 3) 
 
 ### OR 
 
@@ -97,4 +97,4 @@ OR <- data.table(OR = params$OR)
 ggplot(data = OR, aes(x=OR)) +
   geom_density(fill = c_dark)+
   theme(panel.grid = element_blank()) +
-  xlim(0,1.5)
+  xlim(0,1.5) 

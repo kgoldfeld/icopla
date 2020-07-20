@@ -2,7 +2,7 @@
 //  rstan model for Plasma interim evaluation  //
 //                                             //
 //   author:                KSG/DW             //
-//   last modified date:    07/16/2020         //
+//   last modified date:    07/20/2020         //
 //                                             //
 //---------------------------------------------//
 
@@ -14,6 +14,9 @@ data {
   int<lower=1,upper=K> kk[N];    // site for individual
   int<lower=0,upper=1> ctrl[N];  // treatment or control
   int<lower=1,upper=3> cc[K];    // specific control for site
+  real<lower=0> prior_tau_sd;    // prior sd
+  real<lower=0> prior_Delta_sd;  // prior sd
+
 }
 
 parameters {
@@ -41,8 +44,11 @@ model {
   
   // priors
   
-  eta_0 ~ cauchy(0, 25);
-  eta ~ cauchy(0, 25);
+  // eta_0 ~ exponential(0.25);
+  // eta ~ exponential(0.25);
+  
+  eta_0 ~ cauchy(0, 2.5);
+  eta ~ cauchy(0, 2.5);
   
   for (k in 1:K)
     delta_k[k] ~ normal(delta[cc[k]], eta_0);
@@ -50,11 +56,11 @@ model {
   for (c in 1:3)
     delta[c] ~ normal(Delta, eta);
     
-  Delta ~ normal(0, 1);
+  Delta ~ normal(0, prior_Delta_sd);
   
   for (k in 1:K)
     for (l in 1:(L-1))
-      tau[k, l] ~ uniform(-10, 10);
+      tau[k, l] ~ normal(0, prior_tau_sd);
   
   // outcome model
   
