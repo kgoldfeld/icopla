@@ -98,3 +98,15 @@ ggplot(data = OR, aes(x=OR)) +
   geom_density(fill = c_dark)+
   theme(panel.grid = element_blank()) +
   xlim(0,1.5) 
+
+#### ACF
+
+mcmc.chain <- as.matrix(fit)
+acf(mcmc.chain[, 'delta[1]'])
+acf(mcmc.chain[, 'delta[2]'])
+acf(mcmc.chain[, 'delta[3]'])
+acf(mcmc.chain[, 'Delta'])
+acf(mcmc.chain[, 'eta'])
+acf(mcmc.chain[, 'eta_0'])
+
+
