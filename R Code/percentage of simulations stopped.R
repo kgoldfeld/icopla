@@ -1,7 +1,7 @@
 ##stop the study if satisfied the stopping rule
-
+load("./8_5/20200805/interim_000.rda")
 #got data after running interim.R
-#load("./8_4/20200803/interim_123.rda")
+load("./8_4/20200803/interim_123.rda")
 load("./8_4/20200803/interim_234.rda")
 #load("./8_4/20200803/interim_345.rda")
 #load("./8_4/20200803/interim_456.rda")
@@ -36,29 +36,31 @@ total_size <- length(unique(data$iternum))
 
 ##stopping rule 1
 
-for (i in 1:total_size){
+for (i in 1:990){
   ##stopping rule 1
   s <- data %>% filter(iternum==i) %>% select(stop1)
   
   ##8 interim looks for Bayesian
   for (k in 1:7){
-    
-    if (s[k]==1){
-      data[iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(stop1= ifelse(row_number() %in% c((k+1):8), 100, stop1))
+    if(is.na(s[k,])){
+      break
+    } else if (s[k,]==1){
+      data[data$iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(stop1= ifelse(row_number() %in% c((k+1):8), 100, stop1))
       break
     }
   }
 }
 
 ##stopping rule 2
-for (i in 1:total_size){
+for (i in 1:990){
   ##stopping rule 2
   s2 <- data %>% filter(iternum==i) %>% select(stop2)
   
   for (k in 1:7){
-    
-    if (s2[k]==1){
-      data[iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(stop2= ifelse(row_number() %in% c((k+1):8), 100, stop2))
+    if(is.na(s2[k,])){
+      break
+    } else if (s2[k,]==1){
+      data[data$iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(stop2= ifelse(row_number() %in% c((k+1):8), 100, stop2))
       break
     }
   }
@@ -67,14 +69,15 @@ for (i in 1:total_size){
 
 
 ##stopping rule: p-value<0.05
-for (i in 1:total_size){
+for (i in 1:990){
   
   f5 <- data %>% filter(iternum==i) %>% select(sig_005)
   
   for (k in 1:7){
-    
-    if (f5[k]==1){
-      data[iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(sig_005= ifelse(row_number() %in% c((k+1):8), 100, sig_005))
+    if(is.na(f5[k,])){
+      break
+    } else if (f5[k,]==1){
+      data[data$iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(sig_005= ifelse(row_number() %in% c((k+1):8), 100, sig_005))
       break
     }
   }
@@ -82,29 +85,31 @@ for (i in 1:total_size){
 
 
 ##stopping rule: p-value<0.025
-for (i in 1:total_size){
+for (i in 1:990){
   
   f25 <- data %>% filter(iternum==i) %>% select(sig_0025)
   
   for (k in 1:7){
-    
-    if (f25[k]==1){
-      data[iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(sig_0025= ifelse(row_number() %in% c((k+1):8), 100, sig_0025))
+    if(is.na(f25[k,])){
+      break
+    } else if (f25[k,]==1){
+      data[data$iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(sig_0025= ifelse(row_number() %in% c((k+1):8), 100, sig_0025))
       break
     }
   }
 }
 
 
-##stopping rule: p-value<0.001
-for (i in 1:total_size){
+##stopping rule: p-value<0.01
+for (i in 1:990){
   
   f1 <- data %>% filter(iternum==i) %>% select(sig_001)
   
   for (k in 1:7){
-    
-    if (f1[k]==1){
-      data[iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(sig_001= ifelse(row_number() %in% c((k+1):8), 100, sig_001))
+    if(is.na(f1[k,])){
+      break
+    } else if (f1[k,]==1){
+      data[data$iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(sig_001= ifelse(row_number() %in% c((k+1):8), 100, sig_001))
       break
     }
   }
@@ -116,30 +121,40 @@ for (i in 1:total_size){
 
 ##only include stop =0/1
 size <- data %>% filter(stop1 ==0 | stop1 == 1) %>% group_by(n)%>%summarize(stop1_size=sum(stop1)/total_size,
-                                                                            .groups = 'drop')
+                                                                            .groups = 'drop')%>% as.data.frame()
 ##change to %
-round(size*100,3)
+round(size$stop1_size*100,2)
+
+#type one error
+sum(round(size$stop1_size*100,2))
 
 #rule2
 size <- data %>% filter(stop2 ==0 | stop2 == 1) %>% group_by(n)%>%summarize(stop2_size=sum(stop2)/total_size,
                                                                             .groups = 'drop')
 ##change to %
-round(size*100,3)
+round(size$stop2_size*100,2)
+#type one error
+sum(round(size$stop2_size*100,2))
 
 ##P<0.05
 size <- data %>% filter(sig_005 ==0 | sig_005 == 1) %>% group_by(n)%>%summarize(stop3_size=sum(sig_005)/total_size,
                                                                                 .groups = 'drop')
 ##change to %
-round(size*100,3)
+round(size$stop3_size*100,2)
+
+sum(round(size$stop3_size*100,2))
 
 ##P<0.025
 size <- data %>% filter(sig_0025 ==0 | sig_0025 == 1) %>% group_by(n)%>%summarize(stop4_size=sum(sig_0025)/total_size,
                                                                                   .groups = 'drop')
 ##change to %
-round(size*100,3)
+round(size$stop4_size*100,2)
 
+sum(round(size$stop4_size*100,2))
 ##P<0.01
 size <- data %>% filter(sig_001 ==0 | sig_001 == 1) %>% group_by(n)%>%summarize(stop5_size=sum(sig_001)/total_size,
                                                                                 .groups = 'drop')
 ##change to %
-round(size*100,3)
+round(size$stop5_size*100,2)
+
+sum(round(size$stop5_size*100,2))
