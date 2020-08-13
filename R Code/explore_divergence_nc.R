@@ -115,9 +115,8 @@ prior_tau_sd <- 2.5
 prior_Delta_sd <- .354 # 0.354
 
 studydata <- list(
-  N=N, L= L, K=K, y=y, kk=kk, ctrl=ctrl, cc=cc, cn=cn,
-  prior_tau_sd = prior_tau_sd, prior_Delta_sd = prior_Delta_sd,
-  eta_0 = eta_0, prior_eta_0 = prior_eta_0, eta = eta)
+  N=N, L= L, K=K, y=y, kk=kk, ctrl=ctrl, cc=cc, 
+  prior_tau_sd = prior_tau_sd, prior_Delta_sd = prior_Delta_sd, prior_eta_0 = prior_eta_0, eta = eta)
 
 ## model estimation
 
