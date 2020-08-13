@@ -36,31 +36,27 @@ total_size <- length(unique(data$iternum))
 
 ##stopping rule 1
 
-for (i in 1:990){
+for (i in 1:1080){
   ##stopping rule 1
   s <- data %>% filter(iternum==i) %>% select(stop1)
   
   ##8 interim looks for Bayesian
-  for (k in 1:7){
-    if(is.na(s[k,])){
-      break
-    } else if (s[k,]==1){
-      data[data$iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(stop1= ifelse(row_number() %in% c((k+1):8), 100, stop1))
+  for (k in 1:8){
+    if (s[k,]==1){
+      data[data$iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(stop1= ifelse(row_number() %in% c((k+1):9), 100, stop1))
       break
     }
   }
 }
 
 ##stopping rule 2
-for (i in 1:990){
+for (i in 1:1080){
   ##stopping rule 2
   s2 <- data %>% filter(iternum==i) %>% select(stop2)
   
-  for (k in 1:7){
-    if(is.na(s2[k,])){
-      break
-    } else if (s2[k,]==1){
-      data[data$iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(stop2= ifelse(row_number() %in% c((k+1):8), 100, stop2))
+  for (k in 1:8){
+    if (s2[k,]==1){
+      data[data$iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(stop2= ifelse(row_number() %in% c((k+1):9), 100, stop2))
       break
     }
   }
@@ -69,15 +65,13 @@ for (i in 1:990){
 
 
 ##stopping rule: p-value<0.05
-for (i in 1:990){
+for (i in 1:1080){
   
   f5 <- data %>% filter(iternum==i) %>% select(sig_005)
   
-  for (k in 1:7){
-    if(is.na(f5[k,])){
-      break
-    } else if (f5[k,]==1){
-      data[data$iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(sig_005= ifelse(row_number() %in% c((k+1):8), 100, sig_005))
+  for (k in 1:8){
+     if (f5[k,]==1){
+      data[data$iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(sig_005= ifelse(row_number() %in% c((k+1):9), 100, sig_005))
       break
     }
   }
@@ -85,15 +79,13 @@ for (i in 1:990){
 
 
 ##stopping rule: p-value<0.025
-for (i in 1:990){
+for (i in 1:1080){
   
   f25 <- data %>% filter(iternum==i) %>% select(sig_0025)
   
-  for (k in 1:7){
-    if(is.na(f25[k,])){
-      break
-    } else if (f25[k,]==1){
-      data[data$iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(sig_0025= ifelse(row_number() %in% c((k+1):8), 100, sig_0025))
+  for (k in 1:8){
+     if (f25[k,]==1){
+      data[data$iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(sig_0025= ifelse(row_number() %in% c((k+1):9), 100, sig_0025))
       break
     }
   }
@@ -101,15 +93,13 @@ for (i in 1:990){
 
 
 ##stopping rule: p-value<0.01
-for (i in 1:990){
+for (i in 1:1080){
   
   f1 <- data %>% filter(iternum==i) %>% select(sig_001)
   
-  for (k in 1:7){
-    if(is.na(f1[k,])){
-      break
-    } else if (f1[k,]==1){
-      data[data$iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(sig_001= ifelse(row_number() %in% c((k+1):8), 100, sig_001))
+  for (k in 1:8){
+     if (f1[k,]==1){
+      data[data$iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(sig_001= ifelse(row_number() %in% c((k+1):9), 100, sig_001))
       break
     }
   }
