@@ -6,9 +6,10 @@
 #                                             #
 #---------------------------------------------#
 
-library("simstudy")
-library("rstan")
-library("data.table")
+library(simstudy)
+library(rstan)
+library(data.table)
+library(bayesplot)
 
 # Stan model
 
@@ -43,12 +44,12 @@ genBaseProbs <- function(n, base, similarity, digits = 2) {
 
 defC <- defDataAdd(varname = "b", formula = 0, variance= .02, 
                    dist = "normal")    #each study has a random treatment effect
-defC <- defDataAdd(defC, varname = "size", formula = "75+75*large", 
+defC <- defDataAdd(defC, varname = "size", formula = "50+50*large", 
                    dist = "nonrandom") 
 defC2 <- defDataAdd(varname="C_rv",formula="C * control",
                     dist = "nonrandom") # C_rv=1/2/3: patient received control treatment C=1/2/3
 defA1 <- defDataAdd(varname = "z", 
-                    formula = "(0 + b ) * (C_rv==1) + (0 + b ) * (C_rv==2) + (0 + b ) * (C_rv==3)", 
+                    formula = "(0.4 + b ) * (C_rv==1) + (0.5 + b ) * (C_rv==2) + (0.6 + b ) * (C_rv==3)", 
                     dist = "nonrandom")
 
 #### Generate data
@@ -109,22 +110,22 @@ kk <- dind$study                              ## study for individual
 ctrl <- dind$control                          ## treatment arm for individual
 cc <- dind[, .N, keyby = .(study, C)]$C       ## specific control arm for study
 
-eta <- 1 #.354
-prior_eta_0 <- 1
+eta <- .2 #.354
+prior_eta_0 <- 0.5
 prior_tau_sd <- 2.5
 prior_Delta_sd <- .354 # 0.354
 
 studydata <- list(
-  N=N, L= L, K=K, y=y, kk=kk, ctrl=ctrl, cc=cc, cn=cn,
+  N=N, L= L, K=K, y=y, kk=kk, ctrl=ctrl, cc=cc,
   prior_tau_sd = prior_tau_sd, prior_Delta_sd = prior_Delta_sd,
-  eta_0 = eta_0, prior_eta_0 = prior_eta_0, eta = eta)
+  prior_eta_0 = prior_eta_0, eta = eta)
 
 ## model estimation
 
-a <- Sys.time()
-fit <-  sampling(sm, data=studydata, iter = 3000, warmup = 500, 
-                      cores = 4L, chains = 4, control = list(adapt_delta = 0.9))
-Sys.time() - a
+  a <- Sys.time()
+  fit <-  sampling(sm, data=studydata, iter = 3000, warmup = 500, 
+                        cores = 4L, chains = 4, control = list(adapt_delta = 0.9))
+  Sys.time() - a
 
 print(fit, pars = c("alpha","delta_k", "eta_0","delta", "Delta", "OR"),
       probs = c(0.025, 0.25, 0.5, 0.75, 0.975),
