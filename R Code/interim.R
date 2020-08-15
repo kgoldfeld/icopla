@@ -77,13 +77,14 @@ genBaseProbs <- function(n, base, similarity, digits = 2) {
       
       freq <- t(summary(fit_f)$coefficients[11,])
       data.table(iternum,n, p.eff, p.clinic,Delta.perc,freq)
+      
       }else{
         freq <- matrix("NULL",nrow=1,ncol=4)#other looks: only run Bayesian methods
         colnames(freq) <- c("Estimate",   "Std. Error", "z value","Pr(>|z|)")
         data.table(iternum,n, p.eff, p.clinic,Delta.perc,freq) 
             }
     }
-    
+
     ## Generate the data
     dstudy <- genData(nsites, id = "study")       # generate studies
     dstudy <- trtAssign(dstudy, nTrt = 3, grpName = "C") # allocate to control group
@@ -154,7 +155,7 @@ job <- Slurm_lapply(1:1080,
                     mc.cores = 4,
                     seeds=seeds,
                     tmp_path = "/gpfs/scratch/dw2625",
-                    job_name = "plasma_13",
+                    job_name = "nc_4",
                     sbatch_opt = list(time = "12:00:00"),
                     plan = "wait",
                     overwrite=TRUE)
@@ -166,7 +167,7 @@ site_plasma <- rbindlist(site_plasma) # converting list to data.table
 
 date_stamp <- gsub("-", "", Sys.Date())
 dir.create(file.path("/gpfs/home/dw2625/R/x86_64-redhat-linux-gnu-library/file_danni/", date_stamp), showWarnings = FALSE)
-save(site_plasma, file = paste0("/gpfs/home/dw2625/R/x86_64-redhat-linux-gnu-library/file_danni/", date_stamp, "/interim_simulations.rda"))
+save(site_plasma, file = paste0("/gpfs/home/dw2625/R/x86_64-redhat-linux-gnu-library/file_danni/", date_stamp, "/interim_nc_000.rda"))
 
 
 
