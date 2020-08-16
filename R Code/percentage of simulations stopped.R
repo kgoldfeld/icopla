@@ -169,10 +169,11 @@ sum(p)
 ##check divergence issue
 library("ggplot2")
 
-p <- ggplot(data, aes(x=as.factor(n), y=div/12000,group=as.factor(n))) 
+p <- ggplot(data, aes(x=as.factor(n), y=(div/12000)*100,group=as.factor(n))) 
 p + geom_boxplot(outlier.size=1, notch=FALSE)+
-  scale_x_discrete(labels=c("16%","33%","40%","50%","60%","67%","80%","90%","100%"))+
+  scale_x_discrete(labels=c("16","33","40","50","60","67","80","90","100"))+
   labs(title="% of divergent transitions of each interim look",x="% of sample", 
        y = "% of divergent transitions")+
   theme(axis.text.x=element_text(color = "black", size=11, angle=30, vjust=.8, hjust=0.8)) 
 
+data %>%  group_by(n)%>%summarize(stop5_size=max(div)/12000, .groups = 'drop')
