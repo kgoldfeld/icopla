@@ -1,10 +1,10 @@
 ##stop the study if satisfied the stopping rule
-load("./8_5/20200805/interim_000.rda")
 #got data after running interim.R
-load("./8_4/20200803/interim_123.rda")
-load("./8_4/20200803/interim_234.rda")
-#load("./8_4/20200803/interim_345.rda")
-#load("./8_4/20200803/interim_456.rda")
+load("./R Code/20200815/interim_nc_000.rda")
+load("./R Code/20200815/interim_nc_123.rda")
+load("./R Code/20200815/interim_nc_234.rda")
+load("./R Code/20200815/interim_nc_345.rda")
+load("./R Code/20200815/interim_nc_456.rda")
 
 #remove Delta 
 data <- subset(site_plasma,select=-Delta.perc)
@@ -42,7 +42,9 @@ for (i in 1:1080){
   
   ##8 interim looks for Bayesian
   for (k in 1:8){
-    if (s[k,]==1){
+    if(is.na(s[k,])){
+      break
+    } else if (s[k,]==1){
       data[data$iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(stop1= ifelse(row_number() %in% c((k+1):9), 100, stop1))
       break
     }
@@ -55,8 +57,10 @@ for (i in 1:1080){
   s2 <- data %>% filter(iternum==i) %>% select(stop2)
   
   for (k in 1:8){
-    if (s2[k,]==1){
-      data[data$iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(stop2= ifelse(row_number() %in% c((k+1):9), 100, stop2))
+    if(is.na(s2[k,])){
+      break
+    } else if (s2[k,]==1){
+      data[data$iternum==i,] <- data %>% filter(iternum==i) %>% mutate(stop2= ifelse(row_number() %in% c((k+1):9), 100, stop2))
       break
     }
   }
@@ -70,7 +74,9 @@ for (i in 1:1080){
   f5 <- data %>% filter(iternum==i) %>% select(sig_005)
   
   for (k in 1:8){
-     if (f5[k,]==1){
+    if(is.na(f5[k,])){
+      break
+    } else if (f5[k,]==1){
       data[data$iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(sig_005= ifelse(row_number() %in% c((k+1):9), 100, sig_005))
       break
     }
@@ -84,7 +90,9 @@ for (i in 1:1080){
   f25 <- data %>% filter(iternum==i) %>% select(sig_0025)
   
   for (k in 1:8){
-     if (f25[k,]==1){
+    if(is.na(f25[k,])){
+      break
+    } else if (f25[k,]==1){
       data[data$iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(sig_0025= ifelse(row_number() %in% c((k+1):9), 100, sig_0025))
       break
     }
@@ -98,7 +106,9 @@ for (i in 1:1080){
   f1 <- data %>% filter(iternum==i) %>% select(sig_001)
   
   for (k in 1:8){
-     if (f1[k,]==1){
+    if(is.na(f1[k,])){
+      break
+    } else if (f1[k,]==1){
       data[data$iternum==i,] <- data %>% filter(iternum==i) %>%  mutate(sig_001= ifelse(row_number() %in% c((k+1):9), 100, sig_001))
       break
     }
@@ -107,44 +117,62 @@ for (i in 1:1080){
 
 
 #fraction of simulations satisfied stopping rule
+#interim look 16%;33%;40%;50%;60%;67%;80%;90%;100% for Bayesian
+#33%,50%,67%,90%,100% for frequentist method
+
 #rule1
 
 ##only include stop =0/1
 size <- data %>% filter(stop1 ==0 | stop1 == 1) %>% group_by(n)%>%summarize(stop1_size=sum(stop1)/total_size,
                                                                             .groups = 'drop')%>% as.data.frame()
 ##change to %
-round(size$stop1_size*100,2)
-
-#type one error
-sum(round(size$stop1_size*100,2))
+p <- round(size$stop1_size*100,2)
+p
+#type one error or power
+sum(p)
 
 #rule2
 size <- data %>% filter(stop2 ==0 | stop2 == 1) %>% group_by(n)%>%summarize(stop2_size=sum(stop2)/total_size,
                                                                             .groups = 'drop')
 ##change to %
-round(size$stop2_size*100,2)
-#type one error
-sum(round(size$stop2_size*100,2))
+p <- round(size$stop2_size*100,2)
+p
+#type one error or power
+sum(p)
 
 ##P<0.05
 size <- data %>% filter(sig_005 ==0 | sig_005 == 1) %>% group_by(n)%>%summarize(stop3_size=sum(sig_005)/total_size,
                                                                                 .groups = 'drop')
 ##change to %
-round(size$stop3_size*100,2)
-
-sum(round(size$stop3_size*100,2))
+p <- round(size$stop3_size*100,2)
+p
+#type one error or power
+sum(p)
 
 ##P<0.025
 size <- data %>% filter(sig_0025 ==0 | sig_0025 == 1) %>% group_by(n)%>%summarize(stop4_size=sum(sig_0025)/total_size,
                                                                                   .groups = 'drop')
 ##change to %
-round(size$stop4_size*100,2)
-
-sum(round(size$stop4_size*100,2))
+p <- round(size$stop4_size*100,2)
+p
+#type one error or power
+sum(p)
 ##P<0.01
 size <- data %>% filter(sig_001 ==0 | sig_001 == 1) %>% group_by(n)%>%summarize(stop5_size=sum(sig_001)/total_size,
                                                                                 .groups = 'drop')
 ##change to %
-round(size$stop5_size*100,2)
+p <- round(size$stop5_size*100,2)
+p
+#type one error or power
+sum(p)
 
-sum(round(size$stop5_size*100,2))
+##check divergence issue
+library("ggplot2")
+
+p <- ggplot(data, aes(x=as.factor(n), y=div/12000,group=as.factor(n))) 
+p + geom_boxplot(outlier.size=1, notch=FALSE)+
+  scale_x_discrete(labels=c("16%","33%","40%","50%","60%","67%","80%","90%","100%"))+
+  labs(title="% of divergent transitions of each interim look",x="% of sample", 
+       y = "% of divergent transitions")+
+  theme(axis.text.x=element_text(color = "black", size=11, angle=30, vjust=.8, hjust=0.8)) 
+
