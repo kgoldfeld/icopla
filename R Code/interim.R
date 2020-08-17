@@ -48,21 +48,17 @@ genBaseProbs <- function(n, base, similarity, digits = 2) {
       kk <- sampdat$study                              ## study for individual
       ctrl <- sampdat$control                          ## treatment arm for individual
       cc <- sampdat[, .N, keyby = .(study, C)]$C       ## specific control arm for study
-      eta <- .1 #1
-      prior_eta_0 <- 1
-      prior_tau_sd <- 2.5
-      prior_Delta_sd <- .354 
+      prior_tau_sd <- 5
+      prior_Delta_sd <- 0.354
       
-      studydata <- list(
-        N=N, L= L, K=K, y=y, kk=kk, ctrl=ctrl, cc=cc, 
-        prior_tau_sd = prior_tau_sd, prior_Delta_sd = prior_Delta_sd, prior_eta_0 = prior_eta_0, eta = eta)
-      
+      studydata <- list(N=N, L= L, K=K, y=y, kk=kk, ctrl=ctrl, cc=cc, 
+                        prior_tau_sd = prior_tau_sd, prior_Delta_sd = prior_Delta_sd)
       fit <-  sampling(sm, data=studydata, iter = 3000, warmup = 500, 
                        cores = 4L, chains = 4, control = list(adapt_delta = 0.8))
       
       p.eff <- mean(extract(fit, pars = "OR")[[1]] < 1)
       p.clinic <- mean(extract(fit, pars = "OR")[[1]] < 0.8)
-      Delta.perc <- quantile(extract(fit, pars = 'Delta')[[1]], probs = c(0.025, 0.25, 0.5, 0.75, 0.975)) #control treatment effect
+      Delta.perc <- quantile(extract(fit, pars = 'Delta')[[1]],probs=seq(0,1,0.01)) #control treatment effect
       
       if(n %in% c(25,38,50,68,75)){
       #####Frequentist method: 5 looks
@@ -77,14 +73,13 @@ genBaseProbs <- function(n, base, similarity, digits = 2) {
       
       freq <- t(summary(fit_f)$coefficients[11,])
       data.table(iternum,n, p.eff, p.clinic,Delta.perc,freq)
-      
       }else{
         freq <- matrix("NULL",nrow=1,ncol=4)#other looks: only run Bayesian methods
         colnames(freq) <- c("Estimate",   "Std. Error", "z value","Pr(>|z|)")
         data.table(iternum,n, p.eff, p.clinic,Delta.perc,freq) 
             }
     }
-
+    
     ## Generate the data
     dstudy <- genData(nsites, id = "study")       # generate studies
     dstudy <- trtAssign(dstudy, nTrt = 3, grpName = "C") # allocate to control group
@@ -105,20 +100,20 @@ genBaseProbs <- function(n, base, similarity, digits = 2) {
     
     dind <- rbindlist(dl)
     
-    #interim look: 8%;16%;33%;50%;60%;67%;80%;90%;100%
-   rbindlist(lapply(c(6,12,25,38,45,50,60,68,75),function(x) dofit(iternum,x,dxfull=dind)))
+    #interim look: 16%;33%;50%;60%;67%;80%;90%;100%
+   rbindlist(lapply(c(12,25,38,45,50,60,68,75),function(x) dofit(iternum,x,dxfull=dind)))
    # rbindlist(lapply(c(25,38,50,68,75),function(x) dofit(iternum,x,dxfull=dind)))
   }
 ### Stan model
 
-rt <- stanc("~/R/x86_64-redhat-linux-gnu-library/file_danni/explore_divergence_nc.stan");
+rt <- stanc("~/R/x86_64-redhat-linux-gnu-library/file_danni/plasma_eta_01.stan");
 sm <- stan_model(stanc_ret = rt, verbose=FALSE)
 
 
 
 #### Data definitions
 
-defC <- defDataAdd(varname = "b", formula = 0, variance= .02, 
+defC <- defDataAdd(varname = "b", formula = 0, variance= .005, 
                    dist = "normal")    #each study has a random treatment effect
 defC <- defDataAdd(defC, varname = "size", formula = "75+75*large", 
                    dist = "nonrandom") 
@@ -143,7 +138,7 @@ NJOBS <- 90
 set.seed(382332)
 seeds <- sample(1:1000000,NJOBS,replace=FALSE)
 
-job <- Slurm_lapply(1:1080,
+job <- Slurm_lapply(1:990,
                     iter, 
                     defC=defC,
                     defC2 = defC2,
@@ -155,7 +150,7 @@ job <- Slurm_lapply(1:1080,
                     mc.cores = 4,
                     seeds=seeds,
                     tmp_path = "/gpfs/scratch/dw2625",
-                    job_name = "nc_4",
+                    job_name = "plasma_13",
                     sbatch_opt = list(time = "12:00:00"),
                     plan = "wait",
                     overwrite=TRUE)
@@ -167,7 +162,7 @@ site_plasma <- rbindlist(site_plasma) # converting list to data.table
 
 date_stamp <- gsub("-", "", Sys.Date())
 dir.create(file.path("/gpfs/home/dw2625/R/x86_64-redhat-linux-gnu-library/file_danni/", date_stamp), showWarnings = FALSE)
-save(site_plasma, file = paste0("/gpfs/home/dw2625/R/x86_64-redhat-linux-gnu-library/file_danni/", date_stamp, "/interim_nc_000.rda"))
+save(site_plasma, file = paste0("/gpfs/home/dw2625/R/x86_64-redhat-linux-gnu-library/file_danni/", date_stamp, "/interim_simulations.rda"))
 
 
 
