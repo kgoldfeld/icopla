@@ -24,7 +24,7 @@ data$sig_001 <- ifelse(data$`Pr(>|z|)` < 0.01,1,0)
 
 ##no. of simulation sets with NA
 naiter <- subset(data,is.na(sig_001))$iternum
-newdata <- data[iternum %in% naiter,]
+newdata <- data[data$iternum %in% naiter,]
 
 #remove simulation sets with NA
 data <- anti_join(data,newdata,by="iternum")
@@ -176,4 +176,3 @@ p + geom_boxplot(outlier.size=1, notch=FALSE)+
        y = "% of divergent transitions")+
   theme(axis.text.x=element_text(color = "black", size=11, angle=30, vjust=.8, hjust=0.8)) 
 
-data %>%  group_by(n)%>%summarize(stop5_size=max(div)/12000, .groups = 'drop')
