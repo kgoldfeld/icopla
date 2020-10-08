@@ -121,7 +121,7 @@ defC2 <- defDataAdd(defC2, varname = "ss",
 
 ###Assume male, older people, higher who_baseline do worse
 
-# beta_duration = c(0, .05, .1, .15), beta_age = c(0, .075, .15) and beta_who = c(0, .06, .12) 
+# beta_duration = c(.05, .1, .15, .2), beta_age = c(.075, .15, .225) and beta_who = c(.06, .12, .18) 
 defC2 <- defDataAdd(defC2, varname = "z", 
                     formula = "0.05*ss + 0.1*sex + 0.075*age + 0.06*who_enroll + (0.3 + b ) * (C_rv==1) + (0.4 + b ) * (C_rv==2) + (0.5 + b ) * (C_rv==3)", 
                     dist = "nonrandom")
