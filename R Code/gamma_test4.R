@@ -52,8 +52,6 @@ iter <- function(iternum, defC2, defS,defC3, basestudy, sm){
 rt <- stanc("/gpfs/home/dw2625/r/gamma_test4.stan");
 sm <- stan_model(stanc_ret = rt, verbose=FALSE)
 
-rt <- stanc("./gamma_test4.stan");
-sm <- stan_model(stanc_ret = rt, verbose=FALSE)
 
 defC2 <-  defData(varname = "ss", formula = "0.5;0.5", dist = "categorical")
 defS <- defCondition(
