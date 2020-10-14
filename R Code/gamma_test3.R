@@ -122,7 +122,7 @@ defC2 <- defDataAdd(defC2, varname = "ss",
 
 defS <- defCondition(
   condition = "ss==1",  
-  formula = "(0.09 + a) * (C_rv==1) + (0.10 + a) * (C_rv==2) + (0.11 + a) * (C_rv==3)", 
+  formula = "(0) * (C_rv==1) + (0) * (C_rv==2) + (0) * (C_rv==3)", 
   dist = "nonrandom")
 defS <- defCondition(defS,
                      condition = "ss==2",  
@@ -156,7 +156,7 @@ NJOBS <- 90
 set.seed(382332)
 seeds <- sample(1:1000000,NJOBS,replace=FALSE)
 
-job <- Slurm_lapply(1:1080,
+job <- Slurm_lapply(1:450,
                     iter, 
                     defC=defC,
                     defC2 = defC2,
@@ -165,12 +165,12 @@ job <- Slurm_lapply(1:1080,
                     basestudy=basestudy,
                     nsites=nsites,
                     sm = sm,
-                    njobs = 90, 
+                    njobs = 75, 
                     mc.cores = 4,
                     seeds=seeds,
                     tmp_path = "/gpfs/scratch/dw2625",
-                    job_name = "nc_89",
-                    sbatch_opt = list(time = "8:00:00"),
+                    job_name = "nc_108",
+                    sbatch_opt = list(time = "4:00:00"),
                     plan = "wait",
                     overwrite=TRUE)
 
@@ -181,7 +181,7 @@ site_plasma <- rbindlist(site_plasma) # converting list to data.table
 
 date_stamp <- gsub("-", "", Sys.Date())
 dir.create(file.path("/gpfs/home/dw2625/r/", date_stamp), showWarnings = FALSE)
-save(site_plasma, file = paste0("/gpfs/home/dw2625/r/", date_stamp, "/gamma_test3.rda"))
+save(site_plasma, file = paste0("/gpfs/home/dw2625/r/", date_stamp, "/ss_cov_start0.rda"))
 
 
 

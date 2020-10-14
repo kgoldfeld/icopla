@@ -14,7 +14,6 @@
     int<lower=1,upper=K> kk[N];    // site for individual
     int<lower=0,upper=1> ctrl[N];  // treatment or control
     int<lower=1,upper=3> cc[K];    // specific control for site
-    //int<lower=1,upper=4> ss[N];           //duration strata
     int<lower=1> D;              // number of covariates
     row_vector[D] x[N];          // matrix of covariates  N x D matrix
     row_vector[3] ds[N];    // matrix of duration strata N x 3 matrix
@@ -39,8 +38,7 @@ parameters {
   ordered[L-1] tau[K];      // cut-points for cumulative odds model (K X [L-1] matrix)
   
   real<lower=0>  eta_0;     // sd of delta_k (around delta)
-  // vector[4]  phi;           // sd of gamma_k (around gamma_c)
-  
+    
   // non-central parameterization
   
   vector[K] z_ran_rx;      // site-specific effect 
@@ -61,32 +59,24 @@ transformed parameters{
   
   delta = eta * z_delta + Delta;
   
-  // for (s in 1:4)
-    // beta[s] = prior_beta_sd * z_beta[s]; //beta~N(0,sd=10)
-
+  
   beta = prior_beta_sd * z_beta;
   
   
   for (c in 1:3) 
-     //for (s in 1:4)
-       //gamma[c, s] = prior_gamma_sd * z_gamma[c, s] + Gamma[s]; //gamma_c[s] ~N(Gamma[s],sd=0.1)
-      gamma[c] = prior_gamma_sd * z_gamma[c] + Gamma; //gamma_c[s] ~N(Gamma[s],sd=0.1)
+        gamma[c] = prior_gamma_sd * z_gamma[c] + Gamma; //gamma_c[s] ~N(Gamma[s],sd=0.1)
   
   for (k in 1:K){
     delta_k[k] = eta_0 * z_ran_rx[k] + delta[cc[k]]; 
   }
   
   for (k in 1:K)
-    //for (s in 1:4)
-      //gamma_k[k, s] = prior_phi_s * z_phi[k, s] + gamma[cc[k], s]; //gamma_k[s]~N(gamma_c[s],phi[s])
-      gamma_k[k] = prior_phi_s * z_phi[k] + gamma[cc[k]];
+       gamma_k[k] = prior_phi_s * z_phi[k] + gamma[cc[k]];
       
   for (i in 1:N)  
     yhat[i] = alpha + x[i] * beta + ctrl[i] * (delta_k[kk[i]] + ds[i] * gamma_k[kk[i]]);
     
-    // not ss[i] * beta[ss[[i]]]
-    // not ss[] * ssgamma_k[kk[i],ss[i]]
-}
+  }
 
 model {
   
@@ -102,24 +92,16 @@ model {
   
   Delta ~ normal(0, prior_Delta_sd);
   
-  // for (s in 1:4) {
-    // phi[s] ~ cauchy(0, prior_phi_s);
-    // Gamma[s] ~ normal(0, prior_Gamma_sd);
-    // z_beta[s] ~ std_normal();
-    
-    Gamma ~ normal(0, prior_Gamma_sd);
-  // }
+  Gamma ~ normal(0, prior_Gamma_sd);
+
   
   for (c in 1:3)
-    // for (s in 1:4)
       z_gamma[c] ~ std_normal();
   
   for (k in 1:K)
-    // for (s in 1:4)
       z_phi[k] ~ std_normal();
       
   for (k in 1:K)
-    // for (l in 1:(L-1))
       tau[k] ~ student_t(3, 0, prior_tau_sd);
   
   // outcome model
