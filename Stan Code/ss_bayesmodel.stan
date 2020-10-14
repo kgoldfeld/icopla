@@ -68,12 +68,12 @@ transformed parameters{
   }
   
   
-  for (s in 1:4)
-    for (k in 1:K)
+  for (k in 1:K)
+    for (s in 1:4)
       gamma_k[k,s]= phi[s] * z_phi[k,s] + gamma[cc[k],s]; //gamma_k[s]~N(gamma_c[s],phi[s])
       
   for (i in 1:N)  
-    yhat[i] = alpha + ctrl[i] *(delta_k[kk[i]] + ss[i] * gamma_k[kk[i],ss[i]]) +  ss[i] * beta[ss[i]];
+    yhat[i] = alpha + ctrl[i] * (delta_k[kk[i]] + ss[i] * gamma_k[kk[i],ss[i]]) +  ss[i] * beta[ss[i]];
 }
 
 model {
@@ -83,24 +83,23 @@ model {
   z_ran_rx ~ std_normal(); 
   z_delta ~ std_normal();
 
-  
   alpha ~ normal(0, 0.1);
   eta_0 ~ cauchy(0, prior_eta_0);
   
   Delta ~ normal(0, prior_Delta_sd);
   
-  for (s in 1:4){
-  phi[s] ~ cauchy(0, prior_phi_s);
-  Gamma[s] ~ normal(0, prior_Gamma_sd);
-  z_beta[s] ~ std_normal();
+  for (s in 1:4) {
+    phi[s] ~ cauchy(0, prior_phi_s);
+    Gamma[s] ~ normal(0, prior_Gamma_sd);
+    z_beta[s] ~ std_normal();
   }
   
-  for (s in 1:4)
-    for (c in 1:3)
-    z_gamma[c,s] ~ std_normal();
+  for (c in 1:3)
+    for (s in 1:4)
+      z_gamma[c,s] ~ std_normal();
   
-  for (s in 1:4)
-    for (k in 1:K)
+  for (k in 1:K)
+    for (s in 1:4)
       z_phi[k,s] ~ std_normal();
       
   for (l in 1:(L-1))
