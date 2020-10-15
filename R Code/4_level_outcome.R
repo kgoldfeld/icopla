@@ -26,45 +26,46 @@ library("slurmR")
     }
 
 #### Generate data
-
-
-
     iter <- function(iternum, defC, defC2, defA1, basestudy, nsites, sm)  {
     
-            dstudy <- genData(nsites, id = "study")       # generate studies
-            dstudy <- trtAssign(dstudy, nTrt = 3, grpName = "C") # allocate to control group
-            dstudy <- trtAssign(dstudy, nTrt = 2, strata = "C", grpName = "large", ratio = c(2,1))
-            dstudy <- addColumns(defC, dstudy)
+        dstudy <- genData(nsites, id = "study")       # generate studies
+        dstudy <- trtAssign(dstudy, nTrt = 3, grpName = "C") # allocate to control group
+        dstudy <- trtAssign(dstudy, nTrt = 2, strata = "C", grpName = "large", ratio = c(2,1))
+        dstudy <- addColumns(defC, dstudy)
         
-            dind <- genCluster(dstudy, "study", numIndsVar = "size", "id")
-            dind <- trtAssign(dind, strata="study", grpName = "control") #add control treatment variable, randomly assign control treatment in each study;rx=1:received control;rx=0:received convalescent plasma
-            dind <- addColumns(defC2,dind)
-            dind <- addColumns(defA1, dind) # add z
+        dind <- genCluster(dstudy, "study", numIndsVar = "size", "id")
+        dind <- trtAssign(dind, strata="study", grpName = "control") #add control treatment variable, randomly assign control treatment in each study;rx=1:received control;rx=0:received convalescent plasma
+        dind <- addColumns(defC2,dind)
+        dind <- addColumns(defA1, dind) # add z
         
         
-            dl <- lapply(1:nsites, function(i) {
+        dl <- lapply(1:nsites, function(i) {
             b <- basestudy[i,]
             dx <- dind[study == i]
             genOrdCat(dx, adjVar = "z", b, catVar = "ordY")
-            })
+        })
         
-            dind <- rbindlist(dl)
+        dind <- rbindlist(dl)
         
             ### Data for Stan model
         
-            N = nrow(dind) ;                              ## number of observations
-            L <- dind[, length(unique(ordY))]             ## number of levels of outcome
-            K <- dind[, length(unique(study))]            ## number of studies
-            y <- as.numeric(dind$ordY)                    ## individual outcome
-            kk <- dind$study                              ## study for individual
-            ctrl <- dind$control                          ## treatment arm for individual
-            cc <- dind[, .N, keyby = .(study, C)]$C       ## specific control arm for study
+        N = nrow(dind) ;                              ## number of observations
+        L <- dind[, length(unique(ordY))]             ## number of levels of outcome
+        K <- dind[, length(unique(study))]            ## number of studies
+        y <- as.numeric(dind$ordY)                    ## individual outcome
+        kk <- dind$study                              ## study for individual
+        ctrl <- dind$control                          ## treatment arm for individual
+        cc <- dind[, .N, keyby = .(study, C)]$C       ## specific control arm for study
+        prior_tau_sd <- 5
+        prior_Delta_sd <- 0.354
         
-            studydata <- list(N=N, L=L, K=K, y=y, kk=kk, ctrl=ctrl, cc=cc)
+        studydata <- list(N=N, L= L, K=K, y=y, kk=kk, ctrl=ctrl, cc=cc, 
+                          prior_tau_sd = prior_tau_sd, prior_Delta_sd = prior_Delta_sd)
         
-            fit <-  sampling(sm, data=studydata, seed = 1327, iter = 3000, warmup = 500, cores = 4L,control = list(adapt_delta = 0.95))
+        fit <-  sampling(sm, data=studydata, iter = 3000, warmup = 500, 
+                             cores = 4L, chains = 4, control = list(adapt_delta = 0.8))
         
-            pars <- c("delta_k", "eta_0","delta", "eta", "Delta", "tau")
+         pars <- c("delta_k", "delta", "eta_0", "Delta", "tau")
         
             ##Option 1: print all parameters
             #s <- summary(fit, pars = pars, probs = c(0.05, 0.5, 0.95))$summary
@@ -74,21 +75,20 @@ library("slurmR")
             p.eff <- mean(extract(fit, pars = "OR")[[1]] < 1)
             p.clinic <- mean(extract(fit, pars = "OR")[[1]] < 0.8)
             Delta.mean <- mean(extract(fit, pars = 'Delta')[[1]]) #control treatment effect
-            eta.mean <- mean(extract(fit, pars = 'eta')[[1]])
             eta_0.mean <- mean(extract(fit, pars = 'eta_0')[[1]])
             
-            data.table(iternum, p.eff, p.clinic,Delta.mean,eta.mean,eta_0.mean)
+            data.table(iternum, p.eff, p.clinic,Delta.mean,eta_0.mean)
     }
 ### Stan model
-rt <- stanc("./Stan Code/plasma_ma_delta.stan")
-sm <- stan_model(stanc_ret = rt, verbose=FALSE)
+    rt <- stanc("./Stan Code/plasma_ma_delta_fix_eta.stan");
+    sm <- stan_model(stanc_ret = rt, verbose=FALSE)
 
-set.seed(18459)
+
 
 #### Data definitions
 
 defC <- defDataAdd(varname = "b", formula = 0, variance= .005, 
-                   dist = "normal")                  #each study has a random slope
+                   dist = "normal")    #each study has a random treatment effect
 defC <- defDataAdd(defC, varname = "size", formula = "75+75*large", 
                    dist = "nonrandom") 
 defC2 <- defDataAdd(varname="C_rv",formula="C * control",
@@ -97,13 +97,13 @@ defA1 <- defDataAdd(varname = "z",
                     formula = "(0.8 + b ) * (C_rv==1) + (0.9 + b ) * (C_rv==2) + (1 + b ) * (C_rv==3)", 
                     dist = "nonrandom")
 
+set.seed(184916)
+
 nsites <- 9
 
-###Study specific base probabilities
-
-basestudy <- genBaseProbs(n = nsites, 
-                          base =  c(.20, .30, .30, .20) ,
-                          similarity = 1e3)
+basestudy <- genBaseProbs(n = nsites,
+                          base =  c(0.100, 0.107, 0.095, 0.085, 0.090, 0.090, 0.108, 0.100, 0.090, 0.075, 0.060),
+                          similarity = 100)
 
 #test on laptop 
 #job <- lapply(1:3,iter,defC=defC, defC2=defC2, defA1=defA1, basestudy=basestudy,nsites=nsites, sm)
