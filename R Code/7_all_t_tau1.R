@@ -98,7 +98,7 @@ iter <- function(iternum, defC, defS,defC3, defC2, nsites, basestudy, sm){
 }
 ### Stan model
 
-rt <- stanc("/gpfs/home/dw2625/r/alpha_01_test.stan");
+rt <- stanc("/gpfs/home/dw2625/r/4_add_more_study_final.stan");
 sm <- stan_model(stanc_ret = rt, verbose=FALSE)
 
 defC <- defDataAdd(varname = "a", formula = 0, variance = .005, 
