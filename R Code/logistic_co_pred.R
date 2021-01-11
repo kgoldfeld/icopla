@@ -7,10 +7,7 @@ library(data.table)
 library(slurmR)
 
 #--- Simulate a single data set ---#
-
-defC <- defDataAdd(varname = "a", formula = 0, variance = .005, 
-                   dist = "normal")    
-defC <- defDataAdd(defC, varname = "b", formula = 0, variance= .01, 
+defC <- defDataAdd(varname = "b", formula = 0, variance= .01, 
                    dist = "normal")  #each study has a random slope
 defC <- defDataAdd(defC, varname = "size", formula = "75+75*large", 
                    dist = "nonrandom") 
@@ -98,15 +95,15 @@ dt_to_list <- function(dx) {
   x <- model.matrix(ordY ~ factor(who_enroll) + factor(age) + factor(sex) + factor(ss), data = dx)[, -1]
   D <- ncol(x)
   
-  list(N=N, L=L, K=K, y=y,y_2=y_2, kk=kk, ctrl=ctrl, cc=cc, x=x, D=D)
+  list(N=N, L=L, K=K, y=y, y_2=y_2, kk=kk, ctrl=ctrl, cc=cc, x=x, D=D)
 }
 
 set_cmdstan_path(path = "/gpfs/share/apps/cmdstan/2.25.0")
-mod <- cmdstan_model("/gpfs/home/dw2625/r/ksg_predprob.stan")
+mod <- cmdstan_model("/gpfs/home/dw2625/r/predco.stan")
 modlg <- cmdstan_model("/gpfs/home/dw2625/r/predlogistic.stan")
 
 #set_cmdstan_path(path = "./cmdstan-2.25.0")
-#mod <- cmdstan_model("./ksg_predprob.stan")
+#mod <- cmdstan_model("./predco.stan")
 #modlg <- cmdstan_model("./predlogistic.stan")
 
 fit <- mod$sample(
@@ -124,6 +121,10 @@ fit <- mod$sample(
 draws_dt <- data.table(as_draws_df(fit$draws()))
 mean(draws_dt[, exp(-Delta)] < 1)
 # data.table(nuts_params(fit))[Parameter == "divergent__", mean(Value)]
+#diagnostics_df <- as_draws_df(fit$sampler_diagnostics())
+#div_num <- sum(diagnostics_df[, 'divergent__'])
+#fit$cmdstan_summary()
+
 
 #--- use original with missing outcome - represents "new" data ---#
 
@@ -184,6 +185,8 @@ est_from_draw <- function(n_draw, Draws, dt_obs, dt_new, D, K, s_model,c_model) 
   
   prob_success_lg <- mean(draws_lg[, exp(-Delta)] < 1)
   
+  diagnostics_df <- as_draws_df(fit_lg$sampler_diagnostics())
+  div_num_lg <- sum(diagnostics_df[, 'divergent__'])
   
   
   # fit CO model for combined data set of "complete" data and simulated new data
@@ -202,7 +205,10 @@ est_from_draw <- function(n_draw, Draws, dt_obs, dt_new, D, K, s_model,c_model) 
   
   prob_success_pp <- mean(draws_pp[, exp(-Delta)] < 1)
   
-  return(data.table(n_draw, prob_success_lg,prob_success_pp))
+  diagnostics_df <- as_draws_df(fit_pp$sampler_diagnostics())
+  div_num_pp <- sum(diagnostics_df[, 'divergent__'])
+  
+  return(data.table(n_draw, prob_success_lg,div_num_lg,prob_success_pp,div_num_pp))
   
   # dtNuts <- data.table(nuts_params(fit_pp))
   # pct_div <- dtNuts[Parameter == "divergent__", mean(Value)]
@@ -235,4 +241,4 @@ job <- Slurm_lapply(
 job
 res <- Slurm_collect(job)
 
-#save(res, file = "/gpfs/data/troxellab/ksg/r/predprob.rda")
+save(res, file = "/gpfs/home/dw2625/r/pred_co_l.rda")
