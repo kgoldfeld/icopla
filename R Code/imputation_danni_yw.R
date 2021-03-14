@@ -119,9 +119,21 @@ pred.mat[c('discharge_by_day7','discharge_by_day15',
 pred.mat[("ID"),cov] <- 0
 pred.mat[,"ID"] <- 0
 
+##Manually set imputation methods does not work: R shows errors: Error in get(fn) : object 'mice.impute.ployreg' not found
+#methods <- c(ID="",tr_rct_id="",bl_age="",bl_sex="logreg",bl_symp_days="polr",bl_enrollqtr="",
+ #            bl_blood="ployreg",bl_cardio="logreg",bl_pulm="logreg",bl_diabetes="logreg",out_who0="polr",
+ #            discharge_by_day17="",discharge_by_day15="",who_nearest_neighbor_to_day14="",
+  #           who_nearest_neighbor="",WHO_14="polr")
+
+###So, change method for each variable by dry run
+dry_run <- mice(dind, maxit = 0)
+## bl_symp_days and out_who0 and WHO_14 change from polyreg to polr; Other variables' imputation methods are correct
+dry_run$method[c(5,11,16)] <- c("polr","polr","polr")
+
 data_imp_CP <- mice(
   dind,
   m = 50,
+  method=dry_run$method,
   predictorMatrix=pred.mat
 )
 
@@ -143,6 +155,12 @@ pred.mat[c('discharge_by_day7','discharge_by_day15',
 ##ID has not missing value and will not be used to predict other covariates
 pred.mat[("ID"),cov] <- 0
 pred.mat[,"ID"] <- 0
+
+
+###So, change method for each variable by dry run
+dry_run <- mice(dind, maxit = 0)
+## bl_symp_days and out_who0 and WHO_14from polyreg to polr;
+dry_run$method[c(5,11,16)] <- c("polr","polr","polr")
 
 data_imp_Ctrl <- mice(
   dind,
