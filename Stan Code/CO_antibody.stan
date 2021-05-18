@@ -42,9 +42,9 @@ transformed parameters{
   beta = 2.5 * z_beta;
   delta = 0.354 * z_delta ;
   
-    for (s in 1:2)
+    for (i in 1:2)
      for (k in 1:K)
-    delta_k[s,k] = eta * z_ran_rx[s,k] + delta[t[k]]; 
+    delta_k[i,k] = eta * z_ran_rx[i,k] + delta[t[k]]; 
   
   
   for (i in 1:N){
