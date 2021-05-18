@@ -10,10 +10,10 @@
     int<lower=0> N;                // number of observations
     int<lower=2> L;                // number of WHO categories
     int<lower=1> K;                // number of studies
-    int<lower=1,upper=K> kk[N];    // site for individual
+    int<lower=1,upper=K> kk[N];    // studies for individual
     int<lower=1,upper=L> y[N];     // vector of categorical outcomes
-    int<lower=0,upper=1> ctrl[N];  // treatment or control;control:CP units=0
-    int<lower=1,upper=2> t[K];    // study's CP treatment: low or not low 
+    int<lower=0,upper=1> trt[N];  // treatment(trt=1) or control (trt=0);control:CP units=0 
+    int<lower=1,upper=2> t[K];    // study's CP treatment: low(1) or not low(2)
     int<lower=1> D;              // number of covariates
     row_vector[D] x[N];          // matrix of covariates  N x D matrix
    
@@ -48,7 +48,7 @@ transformed parameters{
   
   
   for (i in 1:N){
-    yhat[i] =  alpha   + x[i] * beta + ctrl[i] * (delta_k[kk[i]]);
+    yhat[i] =  alpha   + x[i] * beta + trt[i] * (delta_k[kk[i]]);
   }
 }
 
