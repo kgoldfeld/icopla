@@ -28,7 +28,7 @@ parameters {
   
   vector[2] z_delta;
   vector[D] z_beta;
-  vector[K] z_ran_rx;        // (2 x K)
+  vector[K] z_ran_rx;        // 
 }
 
 transformed parameters{ 
@@ -36,14 +36,15 @@ transformed parameters{
   vector[N] yhat;
   vector[D] beta;           // covariate estimates 
   vector[2] delta;               // levels effect
-  vector[K] delta_k;        // site specific effect (2 x K)
+  vector[K] delta_k;        // site specific effect 
   
   beta = 2.5 * z_beta;
   delta = 0.354 * z_delta ;
   
-    for (s in 1:2)
-     for (k in 1:K)
-    delta_k[s,k] = eta * z_ran_rx[s,k] + delta[t[k]]; 
+
+  for (k in 1:K)
+    delta_k[k] = eta * z_ran_rx[k] + delta[t[k]]; 
+
   
   
   for (i in 1:N){
