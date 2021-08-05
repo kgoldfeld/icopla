@@ -13,7 +13,7 @@
     int<lower=2> L;
     int<lower=1,upper=K> kk[N];    // RCT for individual
     int<lower=1,upper=S> site[N];   //site for individual
-    int<lower=1,upper=L> y_1[N];
+    int<lower=1,upper=L> y[N];
     int<lower=0,upper=1> ctrl[N];  // treatment or control
     int<lower=1,upper=3> cc[K];    // specific control for RCTs
     int<lower=1,upper=K> site_rct[S]; //specific RCT for site
@@ -90,7 +90,7 @@ model{
   // outcome model
   
   for (i in 1:N){
-    y_1[i] ~ ordered_logistic(yhat[i],tau[kk[i]]);
+    y[i] ~ ordered_logistic(yhat[i],tau[kk[i]]);
    
    }
 }
@@ -98,6 +98,9 @@ model{
 generated quantities {
   
   real OR;
+  real negDelta;
   
   OR = exp(-Delta); 
+  negDelta=-1*Delta;
+  
 }
