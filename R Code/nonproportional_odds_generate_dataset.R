@@ -95,7 +95,7 @@ dind <- addColumns(defC3, dind)
 
 
 ###########Relax proportionality assumption#################
-npAdj <- c(-0.3,0.0,1.0,0,0.1,0.2,-0.1,0.0,0.0,-0.2,0.0)
+npAdj <- c(-5,-3,-3,-0.5,5,2,-3,-5,-5,-2,0.0)
 setkey(dind, "id")
 dl <- lapply(1:nsites, function(i) {
   b <- basestudy[i,]
@@ -109,9 +109,9 @@ dind <- rbindlist(dl)
 
 dind <- dind[, cat := NULL]
 
-save(dind,file="./data/dind_np_local.rda")
+save(dind,file="./data/dind_np_local_v1.rda")
 
-load(file="./data/dind_np_local.rda")
+load(file="./data/dind_np_local_v1.rda")
 
 ##check if proportionality holds in study 3
 data <- subset(dind,study==3)
