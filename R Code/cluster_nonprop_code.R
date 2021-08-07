@@ -9,8 +9,8 @@ library(collapse)
 library(posterior)
 
 
-load("/gpfs/home/dw2625/r/SIM/draws_dt_np.rda")
-load("/gpfs/home/dw2625/r/SIM/dind_np_local.rda")
+load("/gpfs/home/dw2625/r/SIM/draws_dt_np_v3.rda")
+load("/gpfs/home/dw2625/r/SIM/dind_np_local_v3.rda")
 #######draw from posterior iteration#################
 
 newdt <- dind[, ordY := NULL]
@@ -19,7 +19,7 @@ newdt <- dind[, z := NULL]
 newdt[, calt := control * study]
 setkey(newdt, "id")
 
-load("/gpfs/home/dw2625/r/SIM/dind_np_local.rda")##load dind again
+load("/gpfs/home/dw2625/r/SIM/dind_np_local_v3.rda")##load dind again
 #load:dind;basestudy;fit_co
 
 est_from_draw <- function(n_draw, draws_dt, dind, newdt) {
@@ -71,7 +71,7 @@ est_from_draw <- function(n_draw, draws_dt, dind, newdt) {
   dt_new <- rbindlist(dl)  
   
   ###################Plot#################
-  dsum <- dt_new[, .(N = sum(.N)), keyby = .(ordY)]
+  dsum <- dt_new[, .(N = sum(.N)), keyby = .(control,ordY)]
   
   return(data.table(n_draw,dsum))
   
@@ -81,12 +81,12 @@ est_from_draw <- function(n_draw, draws_dt, dind, newdt) {
 NJOBS <- 90
 
 
-job <- Slurm_lapply(1:2100,
+job <- Slurm_lapply(1:9900,
                     est_from_draw, draws_dt=draws_dt, dind=dind, newdt=newdt,
                     njobs = 90, 
                     mc.cores = 4,
                     tmp_path = "/gpfs/scratch/dw2625",
-                    job_name = "sim_84",
+                    job_name = "sim_94",
                     sbatch_opt = list(time = "44:00:00"),
                     plan = "wait",
                     overwrite=TRUE)
@@ -99,6 +99,6 @@ result <- rbindlist(site_plasma) # converting list to data.table
 
 date_stamp <- gsub("-", "", Sys.Date())
 dir.create(file.path("/gpfs/home/dw2625/r/SIM/", date_stamp), showWarnings = FALSE)
-save(site_plasma, file = paste0("/gpfs/home/dw2625/r/SIM/", date_stamp, "/np_predictive_iter2000.rda"))
+save(site_plasma, file = paste0("/gpfs/home/dw2625/r/SIM/", date_stamp, "/np_predictive_iter9900_v4.rda"))
 
 
