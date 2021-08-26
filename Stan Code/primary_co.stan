@@ -10,7 +10,7 @@
     int<lower=0> N;                // number of observations
     int<lower=2> L;                // number of WHO categories
     int<lower=1> K;                // number of studies
-    int<lower=1,upper=L> y_1[N];     // vector of categorical outcomes
+    int<lower=1,upper=L> y[N];     // vector of categorical outcomes
     int<lower=1,upper=K> kk[N];    // site for individual
     int<lower=0,upper=1> ctrl[N];  // treatment or control
     int<lower=1,upper=3> cc[K];    // specific control for site
@@ -77,7 +77,7 @@ model {
   // outcome model
   
   for (i in 1:N)
-    y_1[i] ~ ordered_logistic(yhat[i], tau[kk[i]]);
+    y[i] ~ ordered_logistic(yhat[i], tau[kk[i]]);
 }
 
 generated quantities {
