@@ -1,16 +1,18 @@
 ---
 output: pdf_document
 ---
+
 <style type="text/css">
 body{
-  font-family:Times New Roman;
+  font-family:Lato;
   font-size:10pt;
 }
 h1,h2{
- font-family:Times New Roman;
+ font-family:Lato;
  font-size:10pt;
 }
 </style>
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE,eval=FALSE)
 ```
@@ -20,9 +22,9 @@ library(knitr)
 opts_chunk$set(tidy.opts=list(width.cutoff=55),tidy=TRUE)
 ```
 
-\textbf{Appendix 6}
+## Appendix 6
 
-R code
+### R code
 
 ```{r package}
 library(simstudy)
@@ -38,6 +40,7 @@ mco <- cmdstan_model("./primary_co.stan")
 
 ```{r baseline}
 #--- generating the study-specific baseline probabilities for each outcome level---#
+
 genBaseProbs <- function(n, base, similarity, digits = 2) {
   
   n_levels <- length(base) 
@@ -57,11 +60,13 @@ nsites <- 9                            # assume 9 RCTs in total
 
 basestudy <- genBaseProbs(n = nsites,
                           base =  c(0.100, 0.107, 0.095, 0.085, 0.090, 0.090, 0.108, 0.100, 0.090, 0.075, 0.060),similarity = 100) 
-# More detailed information in Keith's blog : https://www.rdatagen.net/post/generating-probabilities-for-ordinal-categorical-data/
+
+# More detailed information: https://www.rdatagen.net/post/generating-probabilities-for-ordinal-categorical-data/
 ```
 
 ```{r data definition}
 #--- data definition code ---#
+
 defC <- defDataAdd(varname = "b", formula = 0, variance= .01, 
                    dist = "normal")     # RCT specific intercept
 defC <- defDataAdd(defC, varname = "size", formula = "75+75*large", 
@@ -88,8 +93,11 @@ defC2 <- defDataAdd(defC2, varname = "z",
 ```{r iteratition}
 
 iter <- function(iternum, defC, defC2, basestudy, nsites,mco)  {
+  
   set_cmdstan_path(path = "/gpfs/share/apps/cmdstan/2.25.0")
+  
   #--- data generation ---#
+  
   dstudy <- genData(nsites, id = "study")              # 9 RCTs
   dstudy <- trtAssign(dstudy, nTrt = 3, grpName = "C") # allocate 3 control conditions
   dstudy <- trtAssign(dstudy, nTrt = 2, strata = "C", grpName = "large", ratio = c(2,1))
@@ -112,6 +120,7 @@ iter <- function(iternum, defC, defC2, basestudy, nsites,mco)  {
   dind <- rbindlist(dl)
   
   #--- model estimation ---#
+  
   N = nrow(dind)                                # number of observations
   L <- dind[, length(unique(ordY))]             # number of levels of outcome
   K <- dind[, length(unique(study))]            # number of RCTs
@@ -144,6 +153,7 @@ iter <- function(iternum, defC, defC2, basestudy, nsites,mco)  {
   )
   
   #--- estimate extraction ---#
+  
   diagnostics_df <- as_draws_df(fit_co$sampler_diagnostics())
   div_num_co <- sum(diagnostics_df[, 'divergent__'])
   
@@ -156,6 +166,7 @@ iter <- function(iternum, defC, defC2, basestudy, nsites,mco)  {
 
 ```{r replication}
 #--- Replication ---#
+
 job <- Slurm_lapply(1:2520,
                     iter, 
                     defC=defC,
@@ -179,8 +190,11 @@ dir.create(file.path("/gpfs/home/.../r/", date_stamp), showWarnings = FALSE)
 save(site_plasma, file = paste0("/gpfs/home/.../r/", date_stamp, "/model_co.rda"))
 ```
 
-Stan code
-```{r Stan}
+\newpage
+
+### Stan code
+
+```{stan output.var='priors', eval = FALSE}
 data {
   int<lower=0> N;                // number of observations
   int<lower=2> L;                // number of WHO categories
