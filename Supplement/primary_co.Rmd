@@ -12,6 +12,7 @@ h1,h2{
  font-size:10pt;
 }
 </style>
+\pagenumbering{gobble} 
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE,eval=FALSE)
@@ -22,7 +23,7 @@ library(knitr)
 opts_chunk$set(tidy.opts=list(width.cutoff=55),tidy=TRUE)
 ```
 
-## Appendix 6
+## Appendix 3
 
 ### R code
 
